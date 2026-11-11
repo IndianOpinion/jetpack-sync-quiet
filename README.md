@@ -123,6 +123,11 @@ and run WP-Cron from a system cron.
 | `jetpack_sync_quiet_drift_detected` | action | | `(stored, effective, source)`, once per event. |
 | `jetpack_sync_quiet_fallback_applied` | action | | `(Jetpack version, "applied" or "failed")`. |
 
+Add these filters from a must-use plugin or a normal plugin, not from a
+theme. Jetpack reads its settings on `plugins_loaded`, before the theme
+loads, and the tunables and ranges are worked out once per request at that
+first read, so a filter in `functions.php` comes too late.
+
 See `examples/filters.php` and `examples/wp-config-constants.php`.
 
 ### WP-CLI
@@ -180,7 +185,7 @@ How to measure the effect on your site: [docs/MEASURING.md](docs/MEASURING.md).
   Status warns when `jetpack_sync_cron` is overdue.
 - A site that WordPress.com keeps asking to use dedicated sync still sees at
   most one validation loopback per hour, plus two small option writes per
-  sync send (details in ARCHITECTURE.md).
+  sync send, once the setting has been stored (details in ARCHITECTURE.md).
 - The plugin does not block the spawn-sync route. A request already in flight
   at install time finishes normally. If you also want to refuse external
   calls to that route, do it at the web server; that is your choice.

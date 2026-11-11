@@ -18,6 +18,7 @@ final class FiltersTest extends TestCase
     {
         $this->store(self::DEDICATED_OPTION, '1');
         $this->env->constants['WP_CLI'] = true;
+        wp_schedule_event(self::NOW + 60, 'daily', Guard::HOOK);
         $plugin = $this->boot(['JETPACK_SYNC_QUIET_DISABLE' => true]);
         do_action('plugins_loaded');
         do_action('init');

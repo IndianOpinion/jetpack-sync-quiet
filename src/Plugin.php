@@ -85,6 +85,9 @@ final class Plugin
             add_action(Guard::HOOK, [$this->guard, 'runDaily']);
             add_action(Guard::UPGRADE_HOOK, [$this->guard, 'runAfterUpgrade']);
             add_action('upgrader_process_complete', [$this->guard, 'onUpgrade'], 10, 0);
+        } else {
+            // A no-op keeps no cron event of its own from an earlier, active run.
+            add_action('init', [$this->guard, 'unschedule'], 20);
         }
 
         if (is_admin()) {

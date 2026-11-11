@@ -37,8 +37,10 @@ Automattic/jetpack source in your pull request, and update the stand-in in
 
 ## Style
 
-- PSR-12, `declare(strict_types=1);` in every PHP file except
-  `src/requirements.php`, which must parse on old PHP.
+- PSR-12, `declare(strict_types=1);` in every PHP file except the entry
+  files that must parse on old PHP so they can refuse it politely:
+  `jetpack-sync-quiet.php`, `uninstall.php`, `mu-loader/` and
+  `src/requirements.php`.
 - No error suppression with `@`, no `eval`, no shell calls.
 - Escape every value printed in wp-admin. Check a capability and a nonce on
   anything that changes state.
