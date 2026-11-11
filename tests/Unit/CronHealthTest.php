@@ -161,7 +161,7 @@ final class CronHealthTest extends TestCase
         self::assertSame('in 7 s', $status['next_sync']);
     }
 
-    public function testLastSyncEstimatedFromQueueWhenStatusLacksIt(): void
+    public function testLastSyncFallsBackToQueueAgeWhenStatusLacksIt(): void
     {
         Listener::get_instance()->queue->items = 3;
         Listener::get_instance()->queue->lagSeconds = 120.0;
@@ -169,7 +169,7 @@ final class CronHealthTest extends TestCase
 
         $status = $plugin->status()->collect();
 
-        self::assertSame('no later than 2026-11-11 11:58:00 UTC (estimated from queue lag)', $status['last_successful_sync']);
+        self::assertSame('unknown (not in Jetpack status; oldest unsent change queued 2 min 0 s ago)', $status['last_successful_sync']);
     }
 
     public function testLastSyncUnknownWithEmptyQueue(): void

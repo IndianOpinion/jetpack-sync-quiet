@@ -132,10 +132,11 @@ In order:
    `debug_details.last_succesful_sync` (Jetpack's spelling; the correct
    spelling is also accepted). This is public and present in all three
    versions.
-2. If that is missing, the queue: when the oldest queued item is L seconds
-   old, nothing has been sent for at least L seconds (the queue sends oldest
-   first), so status shows "no later than now minus L (estimated from queue
-   lag)".
+2. If that is missing and the queue is not empty: "unknown", followed by
+   how long the oldest unsent change has waited (the queue lag). The lag is
+   not turned into a time for the last send: on a busy site a send can
+   succeed and still leave older items behind when the batch is full, so
+   queue age gives no bound on the last successful send.
 3. Otherwise "unknown".
 
 ### 5. Tunable ranges
@@ -228,6 +229,13 @@ fighting Jetpack's writes, and it is far below one loopback per request.
 The drift event is recorded once, not on every flip. Blocking the write was
 considered and rejected: the PRD asks the plugin to treat the stored value as
 information and never fight it.
+
+When the option has never been stored (no row in the options table), the
+same header writes nothing at all: `update_option()` reads the old value
+through `get_option()`, gets the filtered `"0"` instead of `false`, so it
+skips its add path and runs an UPDATE that matches no row. It returns false,
+so Jetpack does not run the validation loopback either. Checked against
+WordPress 6.4 and trunk `wp-includes/option.php`.
 
 **Status in WP-CLI.** `max_execution_time` in the CLI is usually 0, so the C25
 comparison only says something on the admin page, which runs under the web

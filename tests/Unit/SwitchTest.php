@@ -210,4 +210,27 @@ final class SwitchTest extends TestCase
 
         self::assertFalse(Settings::is_dedicated_sync_enabled());
     }
+
+    public function testWpcomHeaderOnStoresOneAndJetpackRevertsItAfterOneValidation(): void
+    {
+        $this->store(self::DEDICATED_OPTION, '0');
+        $this->boot();
+
+        \Automattic\Jetpack\Sync\Dedicated_Sender::maybe_change_dedicated_sync_status_from_wpcom_header('on');
+
+        $writes = array_column(WpState::writesTo(self::DEDICATED_OPTION), 'value');
+        self::assertSame([1, 0], $writes);
+        self::assertCount(1, WpState::$httpRequests);
+    }
+
+    public function testWpcomHeaderOnWritesNothingWhenNeverStored(): void
+    {
+        $this->boot();
+
+        \Automattic\Jetpack\Sync\Dedicated_Sender::maybe_change_dedicated_sync_status_from_wpcom_header('on');
+
+        self::assertSame([], WpState::writesTo(self::DEDICATED_OPTION));
+        self::assertSame([], WpState::$httpRequests);
+        self::assertFalse(Settings::is_dedicated_sync_enabled());
+    }
 }

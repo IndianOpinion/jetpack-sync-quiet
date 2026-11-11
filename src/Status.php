@@ -164,7 +164,8 @@ class Status
         if ($limit !== null && $maxExec > 0 && $limit > $maxExec - self::TIME_LIMIT_MARGIN) {
             $warnings[] = sprintf(
                 'cron_sync_time_limit (%d s) is not at least %d s below max_execution_time (%d s): cron sync '
-                . 'over HTTP may be killed mid-batch. Lower cron_sync_time_limit or raise max_execution_time.',
+                . 'over HTTP may be killed mid-batch. Lower cron_sync_time_limit (the jetpack_sync_quiet_ranges '
+                . 'filter allows values below the default range) or raise max_execution_time.',
                 $limit,
                 self::TIME_LIMIT_MARGIN,
                 $maxExec
@@ -231,9 +232,11 @@ class Status
                 Format::duration($now - $last)
             );
         } elseif ($lag !== null && $lag > 0) {
+            // Queue lag gives no bound on the last send: on a busy site a send can
+            // succeed and still leave older items behind. Say what is known.
             $status['last_successful_sync'] = sprintf(
-                'no later than %s (estimated from queue lag)',
-                Format::time($now - $lag)
+                'unknown (not in Jetpack status; oldest unsent change queued %s ago)',
+                Format::duration($lag)
             );
         } else {
             $status['last_successful_sync'] = 'unknown';
