@@ -230,6 +230,11 @@ php examples/demo-without-wordpress.php
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+The CI workflow currently sits at `.github/workflows-pending/ci.yml`: the
+token that published this release could not write workflow files. The owner
+moves it to `.github/workflows/ci.yml` (see the README next to it); until
+then run `composer check` locally.
+
 ## Licence
 
 MIT. See [LICENSE](LICENSE). Jetpack is a trademark of its owner; this
