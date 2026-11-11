@@ -1,0 +1,11 @@
+parameters:
+    level: 8
+    paths:
+        - src
+        - jetpack-sync-quiet.php
+        - uninstall.php
+        - mu-loader
+    bootstrapFiles:
+        - vendor/php-stubs/wordpress-stubs/wordpress-stubs.php
+        - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
+    treatPhpDocTypesAsCertain: false

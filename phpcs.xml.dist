@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<ruleset name="jetpack-sync-quiet">
+    <description>PSR-12 with a few extra checks.</description>
+
+    <file>src</file>
+    <file>tests</file>
+    <file>examples</file>
+    <file>jetpack-sync-quiet.php</file>
+    <file>uninstall.php</file>
+    <file>mu-loader</file>
+
+    <arg name="extensions" value="php"/>
+    <arg name="colors"/>
+    <arg value="sp"/>
+
+    <rule ref="PSR12"/>
+
+    <!-- No error suppression, no debug output left behind. -->
+    <rule ref="Generic.PHP.NoSilencedErrors"/>
+    <rule ref="Generic.PHP.ForbiddenFunctions">
+        <properties>
+            <property name="forbiddenFunctions" type="array">
+                <element key="eval" value="null"/>
+                <element key="exec" value="null"/>
+                <element key="shell_exec" value="null"/>
+                <element key="system" value="null"/>
+                <element key="passthru" value="null"/>
+                <element key="proc_open" value="null"/>
+                <element key="popen" value="null"/>
+                <element key="var_dump" value="null"/>
+                <element key="print_r" value="null"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- WordPress entry files declare and act by design. -->
+    <rule ref="PSR1.Files.SideEffects">
+        <exclude-pattern>jetpack-sync-quiet\.php</exclude-pattern>
+        <exclude-pattern>uninstall\.php</exclude-pattern>
+        <exclude-pattern>src/requirements\.php</exclude-pattern>
+        <exclude-pattern>src/bootstrap\.php</exclude-pattern>
+        <exclude-pattern>mu-loader/*</exclude-pattern>
+        <exclude-pattern>tests/stubs/*</exclude-pattern>
+        <exclude-pattern>tests/bootstrap\.php</exclude-pattern>
+        <exclude-pattern>examples/*</exclude-pattern>
+    </rule>
+
+    <!-- Test names and fixtures read better on one line. -->
+    <rule ref="Generic.Files.LineLength">
+        <exclude-pattern>tests/*</exclude-pattern>
+    </rule>
+
+    <!-- The stubs mirror WordPress and Jetpack names, which are snake_case and unnamespaced. -->
+    <rule ref="PSR1.Methods.CamelCapsMethodName">
+        <exclude-pattern>tests/stubs/*</exclude-pattern>
+    </rule>
+    <rule ref="Squiz.Classes.ValidClassName">
+        <exclude-pattern>tests/stubs/*</exclude-pattern>
+    </rule>
+    <rule ref="PSR1.Classes.ClassDeclaration.MultipleClasses">
+        <exclude-pattern>tests/stubs/*</exclude-pattern>
+    </rule>
+    <rule ref="PSR1.Classes.ClassDeclaration.MissingNamespace">
+        <exclude-pattern>tests/stubs/*</exclude-pattern>
+    </rule>
+    <rule ref="PSR2.Methods.MethodDeclaration.Underscore">
+        <exclude-pattern>tests/stubs/*</exclude-pattern>
+    </rule>
+</ruleset>
