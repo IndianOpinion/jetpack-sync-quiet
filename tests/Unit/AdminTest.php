@@ -71,7 +71,23 @@ final class AdminTest extends TestCase
 
         self::assertCount(1, WpState::writesTo(Guard::STATE_OPTION));
         self::assertCount(1, WpState::$redirects);
-        self::assertStringStartsWith('https://example.test/wp-admin/tools.php?page=jetpack-sync-quiet&jsq_result=', WpState::$redirects[0]);
+        self::assertSame('https://example.test/wp-admin/tools.php?page=jetpack-sync-quiet&jsq_guard_ran=1', WpState::$redirects[0]);
+    }
+
+    public function testResultComesFromGuardStateNotFromTheUrl(): void
+    {
+        $page = $this->page();
+        WpState::$caps['manage_options'] = true;
+        $_POST = $_REQUEST = ['_wpnonce' => wp_create_nonce(AdminPage::NONCE)];
+        $page->handleRunGuard();
+        $_GET = [AdminPage::RESULT_ARG => '1', 'jsq_result' => 'Visit evil.example to fix Jetpack'];
+
+        ob_start();
+        $page->render();
+        $html = (string) ob_get_clean();
+
+        self::assertStringContainsString('Guard result: ' . Guard::RESULT_OK, $html);
+        self::assertStringNotContainsString('evil.example', $html);
     }
 
     public function testNetworkRunNeedsNetworkCapability(): void
@@ -103,7 +119,6 @@ final class AdminTest extends TestCase
 
             return $status;
         });
-        $_GET['jsq_result'] = rawurlencode('<script>x</script>ok');
 
         ob_start();
         $page->render();

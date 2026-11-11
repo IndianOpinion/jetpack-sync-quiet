@@ -18,6 +18,8 @@ class AdminPage
     public const SLUG = 'jetpack-sync-quiet';
     public const ACTION = 'jetpack_sync_quiet_run_guard';
     public const NONCE = 'jetpack_sync_quiet_run_guard';
+    /** Query argument set after "Run guard now". Carries no text. */
+    public const RESULT_ARG = 'jsq_guard_ran';
     public const MEASURING_URL = 'https://github.com/IndianOpinion/jetpack-sync-quiet/blob/main/docs/MEASURING.md';
 
     /** Sites listed on the network page. */
@@ -70,7 +72,7 @@ class AdminPage
         $status = $this->plugin->status()->collect();
 
         echo '<div class="wrap"><h1>' . esc_html('Jetpack Sync Quiet') . '</h1>';
-        $this->renderResult();
+        $this->renderResult(false);
         $this->renderWarnings($status);
         echo '<table class="widefat striped"><tbody>';
         foreach (Status::rows($status) as $row) {
@@ -91,9 +93,10 @@ class AdminPage
             wp_die(esc_html('You do not have permission to view this page.'), '', ['response' => 403]);
         }
         echo '<div class="wrap"><h1>' . esc_html('Jetpack Sync Quiet: network') . '</h1>';
-        $this->renderResult();
+        $this->renderResult(true);
         echo '<table class="widefat striped"><thead><tr>';
-        foreach (['Site', 'Plugin', 'Dedicated sync', 'Queue size', 'Sync cron', 'Warnings'] as $heading) {
+        $headings = ['Site', 'Plugin', 'Dedicated sync', 'Queue size', 'Sync cron', 'Last guard run', 'Warnings'];
+        foreach ($headings as $heading) {
             echo '<th scope="col">' . esc_html($heading) . '</th>';
         }
         echo '</tr></thead><tbody>';
@@ -106,6 +109,7 @@ class AdminPage
                 . '<td>' . esc_html(Format::raw($status['dedicated_sync_effective'] ?? 'n/a')) . '</td>'
                 . '<td>' . esc_html(Format::raw($status['queue_size'] ?? 'n/a')) . '</td>'
                 . '<td>' . esc_html(Format::raw($status['sync_cron_health'] ?? 'n/a')) . '</td>'
+                . '<td>' . esc_html(Format::raw($status['last_guard_run'] ?? 'n/a')) . '</td>'
                 . '<td>' . esc_html((string) $warnings) . '</td></tr>';
             restore_current_blog();
         }
@@ -129,20 +133,20 @@ class AdminPage
         check_admin_referer(self::NONCE);
 
         if ($network) {
-            $results = [];
             foreach ($this->siteIds() as $id) {
                 switch_to_blog($id);
-                $results[] = $id . ': ' . $this->plugin->guard()->run('manual');
+                $this->plugin->guard()->run('manual');
                 restore_current_blog();
             }
-            $result = implode(' | ', $results);
             $base = network_admin_url('settings.php');
         } else {
-            $result = $this->plugin->guard()->run('manual');
+            $this->plugin->guard()->run('manual');
             $base = admin_url('tools.php');
         }
 
-        $url = add_query_arg(['page' => self::SLUG, 'jsq_result' => rawurlencode(substr($result, 0, 500))], $base);
+        // Only a flag goes in the URL. The result itself is read back from the
+        // guard state, so a crafted link cannot put text on this page.
+        $url = add_query_arg(['page' => self::SLUG, self::RESULT_ARG => '1'], $base);
         wp_safe_redirect($url);
         if ($this->exitAfterRedirect) {
             exit;
@@ -178,14 +182,16 @@ class AdminPage
             . esc_html('Status') . '</a></p></div>';
     }
 
-    private function renderResult(): void
+    private function renderResult(bool $network): void
     {
-        // phpcs:ignore WordPress.Security.NonceVerification -- display only, escaped.
-        if (!isset($_GET['jsq_result']) || !is_string($_GET['jsq_result'])) {
+        // phpcs:ignore WordPress.Security.NonceVerification -- display flag only; no input is echoed.
+        if (!isset($_GET[self::RESULT_ARG])) {
             return;
         }
-        $text = sanitize_text_field(rawurldecode(wp_unslash($_GET['jsq_result'])));
-        echo '<div class="notice notice-info"><p>' . esc_html('Guard result: ' . $text) . '</p></div>';
+        $text = $network
+            ? 'Guard run on every site listed below; see the "Last guard run" column.'
+            : 'Guard result: ' . $this->plugin->guard()->state()['last_result'];
+        echo '<div class="notice notice-info"><p>' . esc_html($text) . '</p></div>';
     }
 
     /**
