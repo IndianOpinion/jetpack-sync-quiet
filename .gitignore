@@ -1,2 +1,10 @@
 vendor/
 .phpunit.cache/
+composer.lock
+.phpcs-cache
+*.log
+!examples/*.log
+/build/
+.idea/
+.vscode/
+.DS_Store
